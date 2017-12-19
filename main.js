@@ -89,7 +89,7 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, mail,  call
     if (isValidUsername == null) {
         steem.api.getAccounts([username], function (err, result) {
             if (result.length != 0) {
-                error += ""//"Chosen username is already taken. Please pick another one <br/>";
+                error += "Chosen username is already taken. Please pick another one <br/>";
             }
         });
     }
@@ -105,7 +105,7 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, mail,  call
             if (!steem.auth.wifIsValid(wif, pubWif))
                 error += "Wrong login or password.<br/>";
             if (result[0].balance < steem_nb)
-                error += ""//"You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
+                error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
 
         } else {
             error += "Wrong login or password.<br/>";
@@ -127,8 +127,8 @@ function sendmail(to, giftcard_path) {
     const mailOptions = {
         from: mail_user, // sender address
         to: to, // list of receivers
-        subject: 'Subject of your email', // Subject line
-        html: '<p>waiting for the fredrik stuff here</p>',// plain text body
+        subject: 'STEEMGIFTS HYPE', // Subject line
+        html: '<p>Fredrik stuff here</p>',// plain text body
         attachments: [{   // file on disk as an attachment
             filename: giftcard_path,
             path: __dirname +'/cards/output/'+giftcard_path // stream this file
@@ -168,7 +168,7 @@ app.post('/', urlencodedParser, function (req,res) {
     if (error == "") {
         writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb);
         //fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
-        //sendmail(mail, username+".png");
+        sendmail(mail, username+".png");
         var content = fs.readFileSync(__dirname + "/success.html").toString();
         content = content.replace("##$EMAIL##", mail)
         res.send(content);
