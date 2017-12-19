@@ -77,7 +77,7 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, callback)
     if (isValidUsername == null) {
         steem.api.getAccounts([username], function (err, result) {
             if (result.length != 0) {
-                error += "Chosen username is already taken. Please pick another one <br/>";
+                error += ""//"Chosen username is already taken. Please pick another one <br/>";
             }
         });
     }
@@ -128,7 +128,6 @@ function sendmail(to, giftcard_path) {
     transporter.sendMail(mailOptions, function (err, info) {
         if(err)
             console.log(err);
-
         else
             console.log(info);
     });
@@ -149,11 +148,9 @@ app.post('/', urlencodedParser, function (req,res) {
     validateInput(username, design, steem_nb, log_user, log_pwd, function (error) {
 
     if (error == "") {
-        /* steem.broadcast.accountCreate(wif, fee, creator, newAccountName, owner, active, posting, memoKey, jsonMetadata, function(err, result) {
-       console.log(err, result);
-   });*/
+
         writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb);
-        sendmail(mail, "done.png");
+        sendmail(mail, username+".png");
         var content = fs.readFileSync(__dirname + "/success.html").toString();
         content = content.replace("##$EMAIL##", mail)
         res.send(content);
@@ -170,6 +167,8 @@ app.post('/', urlencodedParser, function (req,res) {
 app.listen(8000, function () {
     console.log("Steemgifts is ready to go !")
 });
+
+
 
 
 /*
@@ -219,4 +218,8 @@ var wif = steem.auth.toWif("howo", "", 'active');
                 });
         });
     });
+
+     steem.broadcast.accountCreate(wif, fee, creator, newAccountName, owner, active, posting, memoKey, jsonMetadata, function(err, result) {
+       console.log(err, result);
+   });
  */
