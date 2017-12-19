@@ -6,6 +6,7 @@
   "dependencies": {
     "crypto-random-string": "^1.0.0",
     "dsteem": "^0.8.5",
+    "email-validator": "^1.1.1",
     "express": "^4.16.2",
     "google-caja": "^0.0.2",
     "jimp": "^0.2.28",

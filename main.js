@@ -7,6 +7,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var steem = require('steem');
 var nodemailer = require('nodemailer');
 var qr = require('qr-image');
+var validator = require("email-validator");
 
 var app = express();
 app.use(express.static('public'));
@@ -66,7 +67,7 @@ function writeimage(img, output, username, password, steem)
 
 }
 
-function validateInput(username,design, steem_nb, log_user, log_pwd, callback)
+function validateInput(username,design, steem_nb, log_user, log_pwd, mail,  callback)
 {
     error = "";
     var isValidUsername = steem.utils.validateAccountName(username);
@@ -80,9 +81,7 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, callback)
     if (!isNaN(steem_nb))
     {
         if (steem_nb < 6)
-        {
             error += "You need a minimum of 6 steem to create an account<br/>";
-        }
     }
 
     if (isValidUsername == null) {
@@ -93,6 +92,9 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, callback)
         });
     }
 
+    if (!validator.validate(mail))
+        error += "Incorrect email address. <br/>"
+
     var wif = steem.auth.toWif(log_user, log_pwd, 'active');
 
     steem.api.getAccounts([log_user], function(err, result) {
@@ -100,6 +102,9 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, callback)
             var pubWif = result[0].active.key_auths[0][0];
             if (!steem.auth.wifIsValid(wif, pubWif))
                 error += "Wrong login or password.<br/>";
+            if (result[0].balance < steem_nb)
+                error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
+
         } else {
             error += "Wrong login or password.<br/>";
         }
@@ -139,8 +144,6 @@ function sendmail(to, giftcard_path) {
     transporter.sendMail(mailOptions, function (err, info) {
         if(err)
             console.log(err);
-        else
-            console.log(info);
     });
 
 }
@@ -158,10 +161,9 @@ app.post('/', urlencodedParser, function (req,res) {
 
 
 
-    validateInput(username, design, steem_nb, log_user, log_pwd, function (error) {
+    validateInput(username, design, steem_nb, log_user, log_pwd, mail, function (error) {
 
     if (error == "") {
-
         writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb);
         //fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
         //sendmail(mail, username+".png");
