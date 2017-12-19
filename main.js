@@ -1,18 +1,15 @@
 var express = require('express');
-var crypto = require("crypto");
 var fs = require('fs');
-var cryptoRandomString = require('crypto-random-string');
 var sanitize = require("xss");
 var bodyParser = require('body-parser');
 var Jimp = require("jimp");
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
+var steem = require('steem');
+var nodemailer = require('nodemailer');
+
+
 var app = express();
 app.use(express.static('public'));
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
-var sc2 = require("sc2-sdk");
-var steem = require('steem');
-
-var Asset = require('dsteem').Asset;
-
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + "/main.html")
@@ -31,7 +28,7 @@ function measureText(font, text) {
     return x;
 };
 
-function writeimage(img, username, password, steem)
+function writeimage(img, output, username, password, steem)
 {
     Jimp.read(__dirname + "/public/cards/"+img, function (err, card) {
         if (err) throw err;
@@ -49,7 +46,7 @@ function writeimage(img, username, password, steem)
                 Jimp.loadFont(__dirname + "/public/cards/nitesh9/steem/Steem-GiftCard-Christmas-Steem.fnt").then(function (font) { // load font from .fnt file
                     var size = measureText(font, steem);
                     card.print(font, 900-(size/2), 435, steem);
-                    card.quality(100).write(__dirname + "/public/cards/done.jpg");
+                    card.quality(100).write(__dirname + "/public/cards/output/"+output);
                     console.log("Card created")
                 });
             });
@@ -99,13 +96,45 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, callback)
         callback(error);
 
     });
-
-
-
-
-
 }
 
+
+function sendmail(to, giftcard_path) {
+    //configure mailer
+
+    var auth = fs.readFileSync(__dirname + "/auth").toString();
+    var mail_user = auth.substring(0, auth.indexOf(":"))
+    var mail_pwd =  auth.substring(auth.indexOf(":")+1)
+
+    const mailOptions = {
+        from: mail_user, // sender address
+        to: to, // list of receivers
+        subject: 'Subject of your email', // Subject line
+        html: '<p>waiting for the fredrik stuff here</p>',// plain text body
+        attachments: [{   // file on disk as an attachment
+            filename: giftcard_path,
+            path: __dirname +'/public/cards/output/'+giftcard_path // stream this file
+        }]
+    };
+
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: mail_user,
+            pass: mail_pwd
+        }
+
+
+    });
+
+    transporter.sendMail(mailOptions, function (err, info) {
+        if(err)
+            console.log(err)
+        else
+            console.log(info);
+    });
+
+}
 
 app.post('/', urlencodedParser, function (req,res) {
     var username = sanitize(req.body.username);
@@ -116,13 +145,15 @@ app.post('/', urlencodedParser, function (req,res) {
     var log_pwd = sanitize(req.body.password);
     var mail = sanitize(req.body.mail);
 
+    sendmail(mail, "done.png");
 
     username = username.toLowerCase();
-    
+
     validateInput(username, design, steem_nb, log_user, log_pwd, function (error) {
 
     if (error == "") {
-        writeimage("nitesh9/Steem-GiftCard-Christmas.png", username, password, steem_nb);
+        writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb);
+
     }
     else {
         var content = fs.readFileSync(__dirname + "/main.html").toString();
