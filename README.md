@@ -1,13 +1,6 @@
-# Nopebot
+# Steemgifts
 
-Nopebot is a steem voting bots that simply does nothing. It upvotes and then 2 minutes later it removes the upvote.
+Steemgifts is a small website to create an account as a gift and get a cool personalized gift card to go with it. 
 
-## use :
-
-place credentials in a file named "auth" placed at the root like this :
-
-username:postingkey
-
-(no line return)
 
 Made by howo : https://utopian.io/@howo
