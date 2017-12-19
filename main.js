@@ -58,12 +58,12 @@ function writeimage(img, username, password, steem)
 
 }
 
-function validateInput(username,design, steem_nb)
+function validateInput(username,design, steem_nb, log_user, log_pwd, callback)
 {
     error = "";
     var isValidUsername = steem.utils.validateAccountName(username);
-    if (isValidUsername != 'null')
-        error += isValidUsername;
+    if (isValidUsername != null)
+        error += isValidUsername+"<br/>";
     if (isNaN(steem_nb))
         error += "Wrong steem value, you need to set a number.<br/> ";
     if (design != "0" && design != "1")
@@ -76,7 +76,34 @@ function validateInput(username,design, steem_nb)
             error += "You need a minimum of 6 steem to create an account<br/>";
         }
     }
-    return error;
+
+    if (isValidUsername == null) {
+        steem.api.getAccounts([username], function (err, result) {
+            if (result.length != 0) {
+                error += "Chosen username is already taken. Please pick another one <br/>";
+            }
+        });
+    }
+
+    var wif = steem.auth.toWif(log_user, log_pwd, 'active');
+
+    steem.api.getAccounts([log_user], function(err, result) {
+        if (result.length != 0) {
+            var pubWif = result[0].active.key_auths[0][0];
+            if (!steem.auth.wifIsValid(wif, pubWif))
+                error += "Wrong login or password.<br/>";
+        } else {
+            error += "Wrong login or password.<br/>";
+        }
+
+        callback(error);
+
+    });
+
+
+
+
+
 }
 
 
@@ -85,12 +112,16 @@ app.post('/', urlencodedParser, function (req,res) {
     var design = "0";//sanitize(req.body.design);
     var steem_nb = sanitize(req.body.steem);
     var password = steem.formatter.createSuggestedPassword();
+    var log_user = sanitize(req.body.user);
+    var log_pwd = sanitize(req.body.password);
+    var mail = sanitize(req.body.mail);
+
 
     username = username.toLowerCase();
+    
+    validateInput(username, design, steem_nb, log_user, log_pwd, function (error) {
 
-    error = validateInput(username, design, steem_nb);
-
-    if (error == "null") {
+    if (error == "") {
         writeimage("nitesh9/Steem-GiftCard-Christmas.png", username, password, steem_nb);
     }
     else {
@@ -99,6 +130,7 @@ app.post('/', urlencodedParser, function (req,res) {
         res.send(content);
     }
 
+    });
    /* steem.broadcast.accountCreate(wif, fee, creator, newAccountName, owner, active, posting, memoKey, jsonMetadata, function(err, result) {
         console.log(err, result);
     });*/
