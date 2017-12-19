@@ -30,23 +30,23 @@ function measureText(font, text) {
 
 function writeimage(img, output, username, password, steem)
 {
-    Jimp.read(__dirname + "/public/cards/"+img, function (err, card) {
+    Jimp.read(__dirname + "/cards/"+img, function (err, card) {
         if (err) throw err;
         // quick and dirty, TODO : make a good image parser to build automatically the image's text and fonts
         // username
-        Jimp.loadFont(__dirname + "/public/cards/nitesh9/username/Steem-GiftCard-Christmas-Username.fnt").then(function (font) { // load font from .fnt file
+        Jimp.loadFont(__dirname + "/cards/nitesh9/username/Steem-GiftCard-Christmas-Username.fnt").then(function (font) { // load font from .fnt file
             var size = measureText(font, username);
             card.print(font, 905-(size/2), 130, username);
 
             // password
-            Jimp.loadFont(__dirname + "/public/cards/nitesh9/password/Steem-GiftCard-Christmas-Password.fnt").then(function (font) { // load font from .fnt file
+            Jimp.loadFont(__dirname + "/cards/nitesh9/password/Steem-GiftCard-Christmas-Password.fnt").then(function (font) { // load font from .fnt file
                 card.print(font, 496, 653, password);
 
                 // steem
-                Jimp.loadFont(__dirname + "/public/cards/nitesh9/steem/Steem-GiftCard-Christmas-Steem.fnt").then(function (font) { // load font from .fnt file
+                Jimp.loadFont(__dirname + "/cards/nitesh9/steem/Steem-GiftCard-Christmas-Steem.fnt").then(function (font) { // load font from .fnt file
                     var size = measureText(font, steem);
                     card.print(font, 900-(size/2), 435, steem);
-                    card.quality(100).write(__dirname + "/public/cards/output/"+output);
+                    card.quality(100).write(__dirname + "/cards/output/"+output);
                     console.log("Card created")
                 });
             });
@@ -113,7 +113,7 @@ function sendmail(to, giftcard_path) {
         html: '<p>waiting for the fredrik stuff here</p>',// plain text body
         attachments: [{   // file on disk as an attachment
             filename: giftcard_path,
-            path: __dirname +'/public/cards/output/'+giftcard_path // stream this file
+            path: __dirname +'/cards/output/'+giftcard_path // stream this file
         }]
     };
 
@@ -123,13 +123,12 @@ function sendmail(to, giftcard_path) {
             user: mail_user,
             pass: mail_pwd
         }
-
-
     });
 
     transporter.sendMail(mailOptions, function (err, info) {
         if(err)
-            console.log(err)
+            console.log(err);
+
         else
             console.log(info);
     });
@@ -145,28 +144,26 @@ app.post('/', urlencodedParser, function (req,res) {
     var log_pwd = sanitize(req.body.password);
     var mail = sanitize(req.body.mail);
 
-    sendmail(mail, "done.png");
-
     username = username.toLowerCase();
 
     validateInput(username, design, steem_nb, log_user, log_pwd, function (error) {
 
     if (error == "") {
+        /* steem.broadcast.accountCreate(wif, fee, creator, newAccountName, owner, active, posting, memoKey, jsonMetadata, function(err, result) {
+       console.log(err, result);
+   });*/
         writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb);
-
+        sendmail(mail, "done.png");
+        var content = fs.readFileSync(__dirname + "/success.html").toString();
+        content = content.replace("##$EMAIL##", mail)
+        res.send(content);
     }
     else {
         var content = fs.readFileSync(__dirname + "/main.html").toString();
         content = content.replace("<p class=\"error\"></p>", "<p class=\"error\">"+error+"</p>")
         res.send(content);
     }
-
     });
-   /* steem.broadcast.accountCreate(wif, fee, creator, newAccountName, owner, active, posting, memoKey, jsonMetadata, function(err, result) {
-        console.log(err, result);
-    });*/
-
-    //res.sendFile(__dirname + "/main.html")
 });
 
 
