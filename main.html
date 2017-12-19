@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+	<title>Steemgifts</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!--[if lte IE 8]><script src="assets/js/html5shiv.js"></script><![endif]-->
+	<link rel="stylesheet" href="assets/css/main.css" />
+	<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+	<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-loading">
+
+<!-- Wrapper -->
+<div id="wrapper">
+	<section id="header">
+	</section>
+
+	<!-- Main -->
+	<section id="main">
+		<h2>STEEMGIFTS</h2>
+		<p class="error"></p>
+		<form method="post" action="/">
+			<div class="field">
+				New account username :
+				<input type="text" name="username" id="username" maxlength="16" style="text-transform: lowercase"/>
+			</div>
+
+			Design :
+
+
+			<input type="hidden" value="1" name="design" id="design">
+			<img class="mySlides" src="cards/nitesh9/Steem-GiftCard-Christmas.png" style="width:840px;height: 357.5px;margin: auto;border: 1px solid; ">
+			<!--<img class="mySlides"   src="cards/2.png" style="width:840px;height: 357.5px;margin: auto; text-align: center">
+			<button type="button" class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
+			<button type="button" onclick="plusDivs(1)">&#10095;</button>-->
+
+			<div class="field">
+				Gifted STEEM :
+				<input type="text" name="steem" id="steem" value="50"/>
+				Your email address :
+				<input type="email" name="mail" id="mail" style="text-transform: lowercase"/>
+				<br/>
+				Your steem Login Details :
+				<input type="text" name="user" id="user" placeholder="Username"/>
+				<input type="password" name="Password" id="Password" placeholder="Password"  />
+
+			</div>
+
+
+
+
+			<ul class="actions">
+				<li><input type="submit" class="button" value="Create"></li>
+			</ul>
+		</form>
+
+
+
+		<footer>
+
+		</footer>
+	</section>
+
+	<!-- Footer -->
+	<footer id="footer">
+
+	</footer>
+
+</div>
+
+<!-- Scripts -->
+<!--[if lte IE 8]><script src="assets/js/respond.min.js"></script><![endif]-->
+<script>
+    if ('addEventListener' in window) {
+        window.addEventListener('load', function() { document.body.className = document.body.className.replace(/\bis-loading\b/, ''); });
+        document.body.className += (navigator.userAgent.match(/(MSIE|rv:11\.0)/) ? ' is-ie' : '');
+    }
+
+    var slideIndex = 1;
+    showDivs(slideIndex);
+
+    function plusDivs(n) {
+        showDivs(slideIndex += n);
+
+    }
+
+    function showDivs(n) {
+        var i;
+        var x = document.getElementsByClassName("mySlides");
+        if (n > x.length) {slideIndex = 1}
+        if (n < 1) {slideIndex = x.length}
+        for (i = 0; i < x.length; i++) {
+            x[i].style.display = "none";
+        }
+        x[slideIndex-1].style.display = "block";
+        document.getElementById("design").value = slideIndex-1;
+    }
+
+
+</script>
+
+</body>
+</html>

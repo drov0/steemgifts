@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+	<title>Steemgifts</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!--[if lte IE 8]><script src="assets/js/html5shiv.js"></script><![endif]-->
+	<link rel="stylesheet" href="assets/css/main.css" />
+	<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+	<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-loading">
+
+<!-- Wrapper -->
+<div id="wrapper">
+	<section id="header">
+	</section>
+
+	<!-- Main -->
+	<section id="main">
+		<h2>Congratulations ! <br/> Your gift was sent by mail at : ##$EMAIL## you should recieve it soon. <br/> If not, contact us. <br/></h2>
+		<p> An app by <a href="https://steemit.com/@fredrikaa">@fredrikaa</a> and <a href="https://steemit.com/@howo">@howo</a></p>
+
+	</section>
+
+	<!-- Footer -->
+	<footer id="footer">
+
+	</footer>
+
+</div>
+
+<!-- Scripts -->
+<!--[if lte IE 8]><script src="assets/js/respond.min.js"></script><![endif]-->
+<script>
+    if ('addEventListener' in window) {
+        window.addEventListener('load', function() { document.body.className = document.body.className.replace(/\bis-loading\b/, ''); });
+        document.body.className += (navigator.userAgent.match(/(MSIE|rv:11\.0)/) ? ' is-ie' : '');
+    }
+
+    var slideIndex = 1;
+    showDivs(slideIndex);
+
+    function plusDivs(n) {
+        showDivs(slideIndex += n);
+
+    }
+
+    function showDivs(n) {
+        var i;
+        var x = document.getElementsByClassName("mySlides");
+        if (n > x.length) {slideIndex = 1}
+        if (n < 1) {slideIndex = x.length}
+        for (i = 0; i < x.length; i++) {
+            x[i].style.display = "none";
+        }
+        x[slideIndex-1].style.display = "block";
+        document.getElementById("design").value = slideIndex-1;
+    }
+
+
+</script>
+
+</body>
+</html>

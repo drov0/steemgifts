@@ -1,0 +1,22 @@
+{
+  "name": "steemgifts",
+  "version": "1.0.0",
+  "description": "SteemGifts is an account/gift card creator for steem.",
+  "main": "main.js",
+  "dependencies": {
+    "crypto-random-string": "^1.0.0",
+    "dsteem": "^0.8.5",
+    "express": "^4.16.2",
+    "google-caja": "^0.0.2",
+    "jimp":  "git+https://github.com/oliver-moran/jimp.git#pull/199/head",
+    "sc2-sdk": "^1.0.2",
+    "steem": "^0.6.7",
+    "xss": "^0.3.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

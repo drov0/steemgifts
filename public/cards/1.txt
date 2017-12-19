@@ -1,0 +1,5 @@
+Username:900:162:center-align
+Steem:900:435:center-align
+SteemPower:900:498:center-align
+Password:496:657:left-align
+QR:37:580
