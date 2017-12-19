@@ -6,12 +6,13 @@ var Jimp = require("jimp");
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var steem = require('steem');
 var nodemailer = require('nodemailer');
-
+var qr = require('qr-image');
 
 var app = express();
 app.use(express.static('public'));
 
 app.get('/', function (req, res) {
+
     res.sendFile(__dirname + "/main.html")
 });
 
@@ -30,6 +31,12 @@ function measureText(font, text) {
 
 function writeimage(img, output, username, password, steem)
 {
+    qr.image(password, {
+        type: 'png'
+    }).pipe(
+        require('fs').createWriteStream(__dirname + "/cards/output/"+username+"qr.png")
+    );
+
     Jimp.read(__dirname + "/cards/"+img, function (err, card) {
         if (err) throw err;
         // quick and dirty, TODO : make a good image parser to build automatically the image's text and fonts
@@ -46,8 +53,12 @@ function writeimage(img, output, username, password, steem)
                 Jimp.loadFont(__dirname + "/cards/nitesh9/steem/Steem-GiftCard-Christmas-Steem.fnt").then(function (font) { // load font from .fnt file
                     var size = measureText(font, steem);
                     card.print(font, 900-(size/2), 435, steem);
-                    card.quality(100).write(__dirname + "/cards/output/"+output);
-                    console.log("Card created")
+
+                    Jimp.read(__dirname + "/cards/output/"+username+"qr.png", function (err, qrcode) {
+                        card.blit(qrcode, 37, 550);
+                        card.quality(100).write(__dirname + "/cards/output/"+output);
+                        console.log("Card created")
+                    });
                 });
             });
         });
@@ -145,15 +156,19 @@ app.post('/', urlencodedParser, function (req,res) {
 
     username = username.toLowerCase();
 
+
+
     validateInput(username, design, steem_nb, log_user, log_pwd, function (error) {
 
     if (error == "") {
 
         writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb);
-        sendmail(mail, username+".png");
+        //fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
+        //sendmail(mail, username+".png");
         var content = fs.readFileSync(__dirname + "/success.html").toString();
         content = content.replace("##$EMAIL##", mail)
         res.send(content);
+
     }
     else {
         var content = fs.readFileSync(__dirname + "/main.html").toString();
