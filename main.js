@@ -12,6 +12,8 @@ var validator = require("email-validator");
 var app = express();
 app.use(express.static('public'));
 
+steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
+
 app.get('/', function (req, res) {
 
     res.sendFile(__dirname + "/main.html")
@@ -48,7 +50,7 @@ function writeimage(img, output, username, password, steem)
 
             // password
             Jimp.loadFont(__dirname + "/cards/nitesh9/password/Steem-GiftCard-Christmas-Password.fnt").then(function (font) { // load font from .fnt file
-                card.print(font, 496, 653, password);
+                card.print(font, 496, 652, password);
 
                 // steem
                 Jimp.loadFont(__dirname + "/cards/nitesh9/steem/Steem-GiftCard-Christmas-Steem.fnt").then(function (font) { // load font from .fnt file
@@ -103,7 +105,7 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, mail,  call
             if (!steem.auth.wifIsValid(wif, pubWif))
                 error += "Wrong login or password.<br/>";
             if (result[0].balance < steem_nb)
-                error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
+                error += ""//"You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
 
         } else {
             error += "Wrong login or password.<br/>";
