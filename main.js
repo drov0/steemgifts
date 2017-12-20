@@ -31,7 +31,7 @@ function measureText(font, text) {
     return x;
 };
 
-function writeimage(img, output, username, password, steem)
+function writeimage(img, output, username, password, steem, callback)
 {
     qr.image(password, {
         type: 'png'
@@ -60,6 +60,7 @@ function writeimage(img, output, username, password, steem)
                         card.blit(qrcode, 37, 550);
                         card.quality(100).write(__dirname + "/cards/output/"+output);
                         console.log("Card created")
+                        callback();
                     });
                 });
             });
@@ -122,8 +123,6 @@ function sendmail(to, giftcard_path) {
     var auth = fs.readFileSync(__dirname + "/auth").toString();
     var mail_user = auth.substring(0, auth.indexOf(":"))
     var mail_pwd =  auth.substring(auth.indexOf(":")+1)
-    console.log(mail_user);
-    console.log(mail_pwd);
     const mailOptions = {
         from: mail_user, // sender address
         to: to, // list of receivers
@@ -167,9 +166,10 @@ app.post('/', urlencodedParser, function (req,res) {
     validateInput(username, design, steem_nb, log_user, log_pwd, mail, function (error) {
 
     if (error == "") {
-        writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb);
-        //fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
-        sendmail(mail, username+".png");
+        writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb, function() {
+            //fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
+            sendmail(mail, username + ".png");
+        });
         var content = fs.readFileSync(__dirname + "/success.html").toString();
         content = content.replace("##$EMAIL##", mail)
         res.send(content);
