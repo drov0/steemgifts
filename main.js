@@ -14,6 +14,51 @@ app.use(express.static('public'));
 
 steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
 
+// Testnet :
+//steem.api.setOptions({ url: 'wss://testnet.steem.vc',address_prefix:'STX',chain_id: '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673' });
+//steem.config.set('websocket','wss://testnet.steem.vc')
+//steem.config.set('address_prefix', 'STX')
+//steem.config.set('chain_id', '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673')
+
+function createAccount(username, password, owner_name, wif,  fee, callback)
+{
+    var publicKeys = steem.auth.generateKeys(username, password, ['posting', 'owner', 'active', 'memo']);
+
+    var owner = {
+        weight_threshold: 1,
+        account_auths: [],
+        key_auths: [[publicKeys.owner, 1]]
+    };
+    var active = {
+        weight_threshold: 1,
+        account_auths: [],
+        key_auths: [[publicKeys.active, 1]]
+    };
+    var posting = {
+        weight_threshold: 1,
+        account_auths: [],
+        key_auths: [[publicKeys.posting, 1]]
+    };
+
+
+    var jsonMetadata = '';
+    var success = false;
+    try {
+        steem.broadcast.accountCreate(wif, fee, owner_name,
+            username, owner, active, posting, publicKeys.memo,
+            jsonMetadata, function (err) {
+                if (err == null)
+                    success = true;
+                callback(success)
+            });
+    } catch(e)    {
+        console.log(e)
+    }
+
+
+}
+
+
 app.get('/', function (req, res) {
     res.sendFile(__dirname + "/main.html")
 });
@@ -81,10 +126,8 @@ function validateInput(username,design, steem_nb, log_user, log_activekey, mail,
         error += "Wrong design value, please contact us.<br/>";
 
     if (!isNaN(steem_nb))
-    {
         if (steem_nb < 6)
             error += "You need a minimum of 6 steem to create an account<br/>";
-    }
 
     if (isValidUsername == null) {
         steem.api.getAccounts([username], function (err, result) {
@@ -107,8 +150,9 @@ function validateInput(username,design, steem_nb, log_user, log_activekey, mail,
 
             if (!valid)
                 error += "Wrong login or active key.<br/>";
-            if (result[0].balance < steem_nb)
-                error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
+            if (!isNaN(steem_nb))
+                if (parseFloat(result[0].balance) < parseFloat(steem_nb))
+                    error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
 
         } else {
             error += "Wrong login or password.<br/>";
@@ -153,6 +197,18 @@ function sendmail(to, giftcard_path) {
 
 }
 
+
+function decimalPlaces(num) {
+    var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+    if (!match) { return 0; }
+    return Math.max(
+        0,
+        // Number of digits right of decimal point.
+        (match[1] ? match[1].length : 0)
+        // Adjust for scientific notation.
+        - (match[2] ? +match[2] : 0));
+}
+
 app.post('/', urlencodedParser, function (req,res) {
     var username = sanitize(req.body.username);
     var design = "0";//sanitize(req.body.design);
@@ -162,18 +218,44 @@ app.post('/', urlencodedParser, function (req,res) {
     var log_activekey = sanitize(req.body.activekey);
     var mail = sanitize(req.body.mail);
 
+
     username = username.toLowerCase();
 
     validateInput(username, design, steem_nb, log_user, log_activekey, mail, function (error) {
 
-    if (error == "") {
-        writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb, function() {
-            //fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
-            sendmail(mail, username + ".png");
+    if (error === "") {
+
+        steem_nb = ""+Math.round(steem_nb*1000)/1000;
+
+        var decimals = decimalPlaces(steem_nb)
+
+        if (decimals === 0)
+            steem_nb += ".000 STEEM";
+        else if (decimals === 1)
+            steem_nb += "00 STEEM";
+        else if (decimals === 2)
+            steem_nb += "0 STEEM";
+        else
+            steem_nb += " STEEM"
+        createAccount(username, password, log_user, log_activekey,  steem_nb, function(success){
+            if (success){
+                writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb, function() {
+                    //fs.unlink(__dirname + "/cards/output/"+username+"qr.png"); // TODO : Do that without breaking things
+                    sendmail(mail, username + ".png");
+                    var content = fs.readFileSync(__dirname + "/success.html").toString();
+                    content = content.replace("##$EMAIL##", mail)
+                    res.send(content);
+                });
+            } else {
+                var content = fs.readFileSync(__dirname + "/main.html").toString();
+                content = content.replace("<p class=\"error\"></p>", "<p style=\"text-transform: none\">" +
+                    "There was an error during the creation of your account.<br/> " +
+                    "Please look if your steem was sent, if so, the account is : "+username+ ":" +password+" . <br/>" +
+                    "Contact us for your card.</p>")
+                res.send(content);
+            }
         });
-        var content = fs.readFileSync(__dirname + "/success.html").toString();
-        content = content.replace("##$EMAIL##", mail)
-        res.send(content);
+
 
     }
     else {
@@ -190,57 +272,3 @@ app.listen(8000, function () {
 });
 
 
-
-
-/*
-
-var wif = steem.auth.toWif("howo", "", 'active');
-
-    var publicKeys = steem.auth.generateKeys("BUumcSh4Cm", "barman1", ['posting', 'owner', 'active', 'memo']);
-
-    var owner = {
-        weight_threshold: 1,
-        account_auths: [],
-        key_auths: [[publicKeys.owner, 1]]
-    };
-    var active = {
-        weight_threshold: 1,
-        account_auths: [],
-        key_auths: [[publicKeys.active, 1]]
-    };
-    var posting = {
-        weight_threshold: 1,
-        account_auths: [],
-        key_auths: [[publicKeys.posting, 1]]
-    };
-
-    steem.api.getConfig(function(err, config) {
-        if(err){
-            console.log(err, config);
-            throw new Error(err);
-        }
-
-        steem.api.getChainProperties(function(err2, chainProps) {
-            if(err2){
-                console.log(err2, chainProps);
-                throw new Error(err2);
-            }
-
-            var ratio = config['STEEMIT_CREATE_ACCOUNT_WITH_STEEM_MODIFIER'];
-            var fee = Asset.from(chainProps.account_creation_fee).multiply(ratio);
-
-            var feeString = fee.toString();
-            var jsonMetadata = '';
-
-            steem.broadcast.accountCreate(wif, feeString, "howo",
-                "howo1",owner , active, posting, publicKeys.memo,
-                jsonMetadata, function(err, result) {
-                    console.log(err, result);
-                });
-        });
-    });
-
-     steem.broadcast.accountCreate(wif, fee, creator, newAccountName, owner, active, posting, memoKey, jsonMetadata, function(err, result) {
-       console.log(err, result);
-   });
- */
