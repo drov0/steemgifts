@@ -15,11 +15,6 @@ app.use(express.static('public'));
 steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
 
 app.get('/', function (req, res) {
-    var auth = fs.readFileSync(__dirname + "/auth").toString();
-    var mail_user = auth.substring(0, auth.indexOf(":"))
-    var mail_pwd =  auth.substring(auth.indexOf(":")+1)
-    console.log(mail_user);
-    console.log(mail_pwd);
     res.sendFile(__dirname + "/main.html")
 });
 
@@ -151,6 +146,7 @@ function sendmail(to, giftcard_path) {
     transporter.sendMail(mailOptions, function (err, info) {
         if(err)
             console.log(err);
+
     });
 
 }
