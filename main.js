@@ -100,7 +100,12 @@ function validateInput(username,design, steem_nb, log_user, log_activekey, mail,
     steem.api.getAccounts([log_user], function(err, result) {
         if (result.length != 0) {
             var pubWif = result[0].active.key_auths[0][0];
-            if (!steem.auth.wifIsValid(log_activekey, pubWif))
+            var valid = false;
+            try {
+                valid = steem.auth.wifIsValid(log_activekey, pubWif)
+            }catch (e){}
+
+            if (!valid)
                 error += "Wrong login or active key.<br/>";
             if (result[0].balance < steem_nb)
                 error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
@@ -154,12 +159,10 @@ app.post('/', urlencodedParser, function (req,res) {
     var steem_nb = sanitize(req.body.steem);
     var password = steem.formatter.createSuggestedPassword();
     var log_user = sanitize(req.body.user);
-    var log_activekey = sanitize(req.body.password);
+    var log_activekey = sanitize(req.body.activekey);
     var mail = sanitize(req.body.mail);
 
     username = username.toLowerCase();
-
-
 
     validateInput(username, design, steem_nb, log_user, log_activekey, mail, function (error) {
 
