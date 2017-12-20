@@ -24,13 +24,11 @@
 		<p class="error"></p>
 		<form method="post" action="/">
 			<div class="field">
-				New account username :
+				New account username :<br/>
+				<i style="font-size: small;text-transform: none"; >This will be the name of the account holding the STEEM</i>
 				<input type="text" name="username" id="username" maxlength="16" style="text-transform: lowercase"/>
 			</div>
-
 			Design :
-
-
 			<input type="hidden" value="1" name="design" id="design">
 			<img class="mySlides" src="images/example.png" style="width:840px;height: 357.5px;margin: auto;border: 1px solid; ">
 			<!--<img class="mySlides"   src="cards/2.png" style="width:840px;height: 357.5px;margin: auto; text-align: center">
@@ -38,14 +36,18 @@
 			<button type="button" onclick="plusDivs(1)">&#10095;</button>-->
 
 			<div class="field">
-				Gifted STEEM :
+				Gifted STEEM :<br/>
+				<i style="font-size: small;text-transform: none"; >The amount of STEEM that is given with the gift card. Please note that the STEEM will be given as STEEM Power.</i>
 				<input type="text" name="steem" id="steem" value="50"/>
-				Your email address :
+
+				Your email address :<br/>
+				<i style="font-size: small;text-transform: none"; >The email address that will receive the Gift card as a file</i>
 				<input type="email" name="mail" id="mail" style="text-transform: lowercase"/>
-				<br/>
-				Your steem Login Details :
+				Your steem Login Details :<br/>
+				<i style="font-size: small;text-transform: none"; >Login details for the Account making the transaction to the new generated account.</i>
+
 				<input type="text" name="user" id="user" placeholder="Username"  style="text-transform: lowercase"/>
-				<input type="password" name="password" id="password" placeholder="Password" style="text-transform: none" />
+				<input type="text" name="activekey" id="activekey" placeholder="ActiveKey" style="text-transform: none" />
 
 			</div>
 

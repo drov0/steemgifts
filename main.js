@@ -69,7 +69,7 @@ function writeimage(img, output, username, password, steem, callback)
 
 }
 
-function validateInput(username,design, steem_nb, log_user, log_pwd, mail,  callback)
+function validateInput(username,design, steem_nb, log_user, log_activekey, mail,  callback)
 {
     error = "";
     var isValidUsername = steem.utils.validateAccountName(username);
@@ -97,13 +97,11 @@ function validateInput(username,design, steem_nb, log_user, log_pwd, mail,  call
     if (!validator.validate(mail))
         error += "Incorrect email address. <br/>"
 
-    var wif = steem.auth.toWif(log_user, log_pwd, 'active');
-
     steem.api.getAccounts([log_user], function(err, result) {
         if (result.length != 0) {
             var pubWif = result[0].active.key_auths[0][0];
-            if (!steem.auth.wifIsValid(wif, pubWif))
-                error += "Wrong login or password.<br/>";
+            if (!steem.auth.wifIsValid(log_activekey, pubWif))
+                error += "Wrong login or active key.<br/>";
             if (result[0].balance < steem_nb)
                 error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
 
@@ -156,14 +154,14 @@ app.post('/', urlencodedParser, function (req,res) {
     var steem_nb = sanitize(req.body.steem);
     var password = steem.formatter.createSuggestedPassword();
     var log_user = sanitize(req.body.user);
-    var log_pwd = sanitize(req.body.password);
+    var log_activekey = sanitize(req.body.password);
     var mail = sanitize(req.body.mail);
 
     username = username.toLowerCase();
 
 
 
-    validateInput(username, design, steem_nb, log_user, log_pwd, mail, function (error) {
+    validateInput(username, design, steem_nb, log_user, log_activekey, mail, function (error) {
 
     if (error == "") {
         writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb, function() {
