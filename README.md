@@ -6,9 +6,7 @@ install :
 
 Make sure you have an up to date nodejs :
 
->sudo npm cache clean -f
->sudo npm install -g n
->sudo n stable
+>sudo npm cache clean -f && sudo npm install -g n && sudo n stable
 
 then :
 
