@@ -188,7 +188,7 @@ function sendmail(to, giftcard_path) {
             user: mail_user,
             pass: mail_pwd
         }
-    });
+    });gi
 
     transporter.sendMail(mailOptions, function (err, info) {
         if(err)
@@ -268,7 +268,7 @@ app.post('/', urlencodedParser, function (req,res) {
 });
 
 
-app.listen(8000, function () {
+app.listen(80, function () {
     console.log("Steemgifts is ready to go !")
 });
 
