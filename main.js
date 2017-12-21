@@ -158,6 +158,8 @@ function validateInput(username,design, steem_nb, log_user, log_activekey, mail,
             error += "Wrong login or password.<br/>";
         }
 
+        error += "Error with the steem blockchain, please wait a few hours and try again.";
+
         callback(error);
 
     });
