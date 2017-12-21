@@ -173,8 +173,7 @@ function sendmail(to, giftcard_path) {
     const mailOptions = {
         from: mail_user, // sender address
         to: to, // list of receivers
-        subject: 'STEEMGIFTS HYPE', // Subject line
-        html: '<p>Fredrik stuff here</p>',// plain text body
+
         attachments: [{   // file on disk as an attachment
             filename: giftcard_path,
             path: __dirname +'/cards/output/'+giftcard_path // stream this file
@@ -183,6 +182,8 @@ function sendmail(to, giftcard_path) {
 
     var transporter = nodemailer.createTransport({
         service: 'gmail',
+        subject: 'Your steemgifts card', // Subject line
+        html: '<p>Thank you for using steemgifts.com to create a unique STEEM gift card for the holidays! We hope it will be a success as a gift and bring some happy new steemians to the growing community. On behalf of the steemgifts team (fredrikaa and howo!) we wish you a merry Christmas and a happy new year. Steem on!<br /> Please find attached your gift card. We highly recommend that you keep the password well hidden and that it is only shared with the person who receives the gift.</p>',// plain text body
         auth: {
             user: mail_user,
             pass: mail_pwd
