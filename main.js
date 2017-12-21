@@ -12,13 +12,13 @@ var validator = require("email-validator");
 var app = express();
 app.use(express.static('public'));
 
-steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
+//steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
 
 // Testnet :
-//steem.api.setOptions({ url: 'wss://testnet.steem.vc',address_prefix:'STX',chain_id: '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673' });
-//steem.config.set('websocket','wss://testnet.steem.vc')
-//steem.config.set('address_prefix', 'STX')
-//steem.config.set('chain_id', '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673')
+steem.api.setOptions({ url: 'wss://testnet.steem.vc',address_prefix:'STX',chain_id: '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673' });
+steem.config.set('websocket','wss://testnet.steem.vc')
+steem.config.set('address_prefix', 'STX')
+steem.config.set('chain_id', '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673')
 
 function createAccount(username, password, owner_name, wif,  fee, callback)
 {
@@ -158,7 +158,7 @@ function validateInput(username,design, steem_nb, log_user, log_activekey, mail,
             error += "Wrong login or password.<br/>";
         }
 
-        error += "Error with the steem blockchain, please wait a few hours and try again.";
+        //error += "Error with the steem blockchain, please wait a few hours and try again.";
 
         callback(error);
 
