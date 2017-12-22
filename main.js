@@ -12,13 +12,17 @@ var validator = require("email-validator");
 var app = express();
 app.use(express.static('public'));
 
-steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
+var production = false;
 
-// Testnet :
-//steem.api.setOptions({ url: 'wss://testnet.steem.vc',address_prefix:'STX',chain_id: '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673' });
-//steem.config.set('websocket','wss://testnet.steem.vc')
-//steem.config.set('address_prefix', 'STX')
-//steem.config.set('chain_id', '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673')
+if (production)
+    steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
+else {
+    // Testnet :
+    steem.api.setOptions({ url: 'wss://testnet.steem.vc',address_prefix:'STX',chain_id: '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673' });
+    steem.config.set('websocket','wss://testnet.steem.vc')
+    steem.config.set('address_prefix', 'STX')
+    steem.config.set('chain_id', '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673')
+}
 
 function createAccount(username, password, owner_name, wif,  fee, callback)
 {
@@ -175,7 +179,8 @@ function sendmail(to, giftcard_path) {
     const mailOptions = {
         from: mail_user, // sender address
         to: to, // list of receivers
-
+        subject: 'Your steemgifts card', // Subject line
+        html: '<p>Thank you for using steemgifts.com to create a unique STEEM gift card for the holidays! We hope it will be a success as a gift and bring some happy new steemians to the growing community. On behalf of the steemgifts team (fredrikaa and howo!) we wish you a merry Christmas and a happy new year. Steem on!<br /> Please find attached your gift card. We highly recommend that you keep the password well hidden and that it is only shared with the person who receives the gift.</p>',// plain text body
         attachments: [{   // file on disk as an attachment
             filename: giftcard_path,
             path: __dirname +'/cards/output/'+giftcard_path // stream this file
@@ -184,8 +189,6 @@ function sendmail(to, giftcard_path) {
 
     var transporter = nodemailer.createTransport({
         service: 'gmail',
-        subject: 'Your steemgifts card', // Subject line
-        html: '<p>Thank you for using steemgifts.com to create a unique STEEM gift card for the holidays! We hope it will be a success as a gift and bring some happy new steemians to the growing community. On behalf of the steemgifts team (fredrikaa and howo!) we wish you a merry Christmas and a happy new year. Steem on!<br /> Please find attached your gift card. We highly recommend that you keep the password well hidden and that it is only shared with the person who receives the gift.</p>',// plain text body
         auth: {
             user: mail_user,
             pass: mail_pwd
