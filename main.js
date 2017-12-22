@@ -107,9 +107,10 @@ function writeimage(img, output, username, password, steem, callback)
 
                     Jimp.read(__dirname + "/cards/output/"+username+"qr.png", function (err, qrcode) {
                         card.blit(qrcode, 37, 550);
-                        card.quality(100).write(__dirname + "/cards/output/"+output);
-                        console.log("Card created")
-                        callback();
+                        card.quality(100).write(__dirname + "/cards/output/"+output, function () {
+                            console.log("Card created")
+                            callback();
+                        });
                     });
                 });
             });
