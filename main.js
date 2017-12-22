@@ -248,7 +248,7 @@ app.post('/create', urlencodedParser, function (req,res) {
     validateInput_create(username, password, design, steem_nb, mail , function (error) {
         if (error === "") {
             writeimage("nitesh9/Steem-GiftCard-Christmas-Double-Sided.png", username + ".png", username, password, steem_nb, function () {
-             //fs.unlink(__dirname + "/cards/output/"+username+"qr.png"); // TODO : Do that without breaking things
+             fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
              sendmail(mail, username + ".png");
              var content = fs.readFileSync(__dirname + "/success.html").toString();
              content = content.replace("##$EMAIL##", mail);
