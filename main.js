@@ -299,7 +299,7 @@ app.post('/', urlencodedParser, function (req,res) {
         createAccount(username, password, log_user, log_activekey, steem_nb, function (success) {
             if (success) {
                 writeimage("nitesh9/Steem-GiftCard-Christmas-Double-Sided.png", username + ".png", username, password, steem_displayed, function () {
-                    //fs.unlink(__dirname + "/cards/output/"+username+"qr.png"); // TODO : Do that without breaking things
+                    fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
                     sendmail(mail, username + ".png");
                     var content = fs.readFileSync(__dirname + "/success.html").toString();
                     content = content.replace("##$EMAIL##", mail)
@@ -326,7 +326,7 @@ app.post('/', urlencodedParser, function (req,res) {
 });
 
 
-app.listen(80, function () {
+app.listen(8000, function () {
     console.log("Steemgifts is ready to go !")
 });
 
