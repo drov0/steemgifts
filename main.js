@@ -233,6 +233,8 @@ app.post('/', urlencodedParser, function (req,res) {
 
         steem_nb = ""+Math.round(steem_nb*1000)/1000;
 
+        var steem_displayed = steem_nb;
+
         var decimals = decimalPlaces(steem_nb)
 
         if (decimals === 0)
@@ -245,7 +247,7 @@ app.post('/', urlencodedParser, function (req,res) {
             steem_nb += " STEEM"
         createAccount(username, password, log_user, log_activekey,  steem_nb, function(success){
             if (success){
-                writeimage("nitesh9/Steem-GiftCard-Christmas.png", username+".png", username, password, steem_nb, function() {
+                writeimage("nitesh9/Steem-GiftCard-Christmas-Double-Sided.png", username+".png", username, password, steem_displayed, function() {
                     //fs.unlink(__dirname + "/cards/output/"+username+"qr.png"); // TODO : Do that without breaking things
                     sendmail(mail, username + ".png");
                     var content = fs.readFileSync(__dirname + "/success.html").toString();
