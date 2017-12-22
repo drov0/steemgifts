@@ -12,7 +12,7 @@ var validator = require("email-validator");
 var app = express();
 app.use(express.static('public'));
 
-var production = false;
+var production = true;
 
 if (production)
     steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
