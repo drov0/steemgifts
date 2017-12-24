@@ -24,6 +24,16 @@ else {
     steem.config.set('chain_id', '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673')
 }
 
+
+/**
+ * Creates an account
+ * @param {String} username - username of the new account
+ * @param {String} password - password of the new account
+ * @param {String} owner_name - Name of the account that will pay the fee (and create the account).
+ * @param {String} wif - active key of the account that will pay the fee (and create the account).
+ * @param {String} fee - fee for creating the account. Needs to be in the form "X.XXX STEEM" eg : 3.210 STEEM
+ * @return {Boolean} success - whether the account creation was successfull or not.
+ */
 function createAccount(username, password, owner_name, wif,  fee, callback)
 {
     var publicKeys = steem.auth.generateKeys(username, password, ['posting', 'owner', 'active', 'memo']);
@@ -62,16 +72,22 @@ function createAccount(username, password, owner_name, wif,  fee, callback)
 
 }
 
-
+// Main page
 app.get('/', function (req, res) {
     res.sendFile(__dirname + "/main.html")
 });
 
+// Creation without an account page
 app.get('/create', function (req, res) {
     res.sendFile(__dirname + "/create.html")
 });
 
-
+/**
+ * Taken from JIMP source code, measures the visual space taken by a text.
+ * @param {font} font - Font object from JIMP's loadFont function
+ * @param {String} text - Text to measure
+ * @return {int} size in pixels
+ */
 function measureText(font, text) {
     var x = 0;
     for (var i = 0; i < text.length; i++) {
@@ -84,6 +100,15 @@ function measureText(font, text) {
     return x;
 };
 
+
+/**
+ *
+ * @param {String} img - Image path using /cards/ as root
+ * @param {String} output - Output image name
+ * @param {String} username - Username to be written on the card
+ * @param {String} password - password to be written on the card
+ * @param {String} steem - steem to be written on the card
+ */
 function writeimage(img, output, username, password, steem, callback)
 {
     qr.image(password, {
@@ -122,7 +147,14 @@ function writeimage(img, output, username, password, steem, callback)
     });
 
 }
-
+/**
+ * @param {String} username - Username to be written on the card
+ * @param {String} design - card design id, unused for now
+ * @param {String} steem_nb - Number of steem to be gifted
+ * @param {String} log_user - username of the creator account
+ * @param {String} log_activekey - Active key of the creator account
+ * @param {String} mail - Mail used to send the finished card
+ */
 function validateInput_account(username, design, steem_nb, log_user, log_activekey, mail, callback)
 {
     error = "";
@@ -173,6 +205,13 @@ function validateInput_account(username, design, steem_nb, log_user, log_activek
 }
 
 
+/**
+ * @param {String} username - Username to be written on the card
+ * @param {String} design - card design id, unused for now
+ * @param {String} steem_nb - Number of steem to be gifted
+ * @param {String} password - Password to be written on the card.
+ * @param {String} mail - Mail used to send the finished card
+ */
 function validateInput_create(username, password, design, steem_nb, mail, callback)
 {
     error = "";
@@ -192,6 +231,10 @@ function validateInput_create(username, password, design, steem_nb, mail, callba
 
 
 
+/**
+ * @param {String} to - Destination mail
+ * @param {String} giftcard_path - card name relative to /cards/output/
+ */
 function sendmail(to, giftcard_path) {
     //configure mailer
 
@@ -226,6 +269,10 @@ function sendmail(to, giftcard_path) {
 }
 
 
+/**
+ * @param {float} num - Number to be analyzedgit
+ * @return {int}  number of decimals
+ */
 function decimalPlaces(num) {
     var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
     if (!match) { return 0; }
