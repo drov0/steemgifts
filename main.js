@@ -3,41 +3,47 @@ var fs = require('fs');
 var sanitize = require("xss");
 var bodyParser = require('body-parser');
 var Jimp = require("jimp");
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
+var urlencodedParser = bodyParser.urlencoded({extended: false})
 var steem = require('steem');
 var nodemailer = require('nodemailer');
 var qr = require('qr-image');
 var validator = require("email-validator");
+var Asset = require('dsteem').Asset;
 
 var app = express();
 app.use(express.static('public'));
 
-var production = true;
+var production =false;
 
 if (production)
-    steem.api.setOptions({ url: 'wss://steemd-int.steemit.com' });
+    steem.api.setOptions({url: 'wss://steemd-int.steemit.com'});
 else {
     // Testnet :
-    steem.api.setOptions({ url: 'wss://testnet.steem.vc',address_prefix:'STX',chain_id: '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673' });
-    steem.config.set('websocket','wss://testnet.steem.vc')
+    steem.api.setOptions({
+        url: 'wss://testnet.steem.vc',
+        address_prefix: 'STX',
+        chain_id: '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673'
+    });
+    steem.config.set('websocket', 'wss://testnet.steem.vc')
     steem.config.set('address_prefix', 'STX')
     steem.config.set('chain_id', '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673')
 }
 
 
 /**
- * Creates an account
+ * Creates an account, note that almost no validation is done.
  * @param {String} username - username of the new account
  * @param {String} password - password of the new account
  * @param {String} owner_name - Name of the account that will pay the fee (and create the account).
  * @param {String} wif - active key of the account that will pay the fee (and create the account).
- * @param {String} fee - fee for creating the account. Needs to be in the form "X.XXX STEEM" eg : 3.210 STEEM
- * @return {Boolean} success - whether the account creation was successfull or not.
+ * @param {callback} callback - callback with a boolean containing whether the account creation was successfull or not.
  */
-function createAccount(username, password, owner_name, wif,  fee, callback)
-{
+function createAccount(username, password, owner_name, wif, steem_nb, callback) {
+
+    // Generate the keypairs
     var publicKeys = steem.auth.generateKeys(username, password, ['posting', 'owner', 'active', 'memo']);
 
+    // Create the key objects
     var owner = {
         weight_threshold: 1,
         account_auths: [],
@@ -58,14 +64,14 @@ function createAccount(username, password, owner_name, wif,  fee, callback)
     var jsonMetadata = '';
     var success = false;
     try {
-        steem.broadcast.accountCreate(wif, fee, owner_name,
+        steem.broadcast.accountCreate(wif, steem_nb, owner_name,
             username, owner, active, posting, publicKeys.memo,
             jsonMetadata, function (err) {
                 if (err == null)
                     success = true;
                 callback(success)
             });
-    } catch(e)    {
+    } catch (e) {
         console.log(e)
     }
 
@@ -75,6 +81,8 @@ function createAccount(username, password, owner_name, wif,  fee, callback)
 // Main page
 app.get('/', function (req, res) {
     res.sendFile(__dirname + "/main.html")
+    var wif = steem.auth.toWif("how", "barman", 'active');
+    console.log(wif)
 });
 
 // Creation without an account page
@@ -93,7 +101,7 @@ function measureText(font, text) {
     for (var i = 0; i < text.length; i++) {
         if (font.chars[text[i]]) {
             x += font.chars[text[i]].xoffset
-                + (font.kernings[text[i]] && font.kernings[text[i]][text[i+1]] ? font.kernings[text[i]][text[i+1]] : 0)
+                + (font.kernings[text[i]] && font.kernings[text[i]][text[i + 1]] ? font.kernings[text[i]][text[i + 1]] : 0)
                 + (font.chars[text[i]].xadvance || 0);
         }
     }
@@ -109,21 +117,20 @@ function measureText(font, text) {
  * @param {String} password - password to be written on the card
  * @param {String} steem - steem to be written on the card
  */
-function writeimage(img, output, username, password, steem, callback)
-{
+function writeimage(img, output, username, password, steem, callback) {
     qr.image(password, {
         type: 'png'
     }).pipe(
-        require('fs').createWriteStream(__dirname + "/cards/output/"+username+"qr.png")
+        require('fs').createWriteStream(__dirname + "/cards/output/" + username + "qr.png")
     );
 
-    Jimp.read(__dirname + "/cards/"+img, function (err, card) {
+    Jimp.read(__dirname + "/cards/" + img, function (err, card) {
         if (err) throw err;
         // quick and dirty, TODO : make a good image parser to build automatically the image's text and fonts
         // username
         Jimp.loadFont(__dirname + "/cards/nitesh9/username/Steem-GiftCard-Christmas-Username.fnt").then(function (font) { // load font from .fnt file
             var size = measureText(font, username);
-            card.print(font, 905-(size/2), 130, username);
+            card.print(font, 905 - (size / 2), 130, username);
 
             // password
             Jimp.loadFont(__dirname + "/cards/nitesh9/password/Steem-GiftCard-Christmas-Password.fnt").then(function (font) { // load font from .fnt file
@@ -132,11 +139,11 @@ function writeimage(img, output, username, password, steem, callback)
                 // steem
                 Jimp.loadFont(__dirname + "/cards/nitesh9/steem/Steem-GiftCard-Christmas-Steem.fnt").then(function (font) { // load font from .fnt file
                     var size = measureText(font, steem);
-                    card.print(font, 900-(size/2), 435, steem);
+                    card.print(font, 900 - (size / 2), 435, steem);
 
-                    Jimp.read(__dirname + "/cards/output/"+username+"qr.png", function (err, qrcode) {
+                    Jimp.read(__dirname + "/cards/output/" + username + "qr.png", function (err, qrcode) {
                         card.blit(qrcode, 37, 550);
-                        card.quality(100).write(__dirname + "/cards/output/"+output, function () {
+                        card.quality(100).write(__dirname + "/cards/output/" + output, function () {
                             console.log("Card created")
                             callback();
                         });
@@ -147,6 +154,7 @@ function writeimage(img, output, username, password, steem, callback)
     });
 
 }
+
 /**
  * @param {String} username - Username to be written on the card
  * @param {String} design - card design id, unused for now
@@ -155,21 +163,40 @@ function writeimage(img, output, username, password, steem, callback)
  * @param {String} log_activekey - Active key of the creator account
  * @param {String} mail - Mail used to send the finished card
  */
-function validateInput_account(username, design, steem_nb, log_user, log_activekey, mail, callback)
-{
+function validateInput_account(username, design, steem_nb, log_user, log_activekey, mail, callback) {
     error = "";
     var isValidUsername = steem.utils.validateAccountName(username);
     if (isValidUsername != null)
-        error += isValidUsername+"<br/>";
+        error += isValidUsername + "<br/>";
     if (isNaN(steem_nb))
         error += "Wrong steem value, you need to set a number.<br/> ";
     if (design != "0" && design != "1")
         error += "Wrong design value, please contact us.<br/>";
 
     if (!isNaN(steem_nb))
-        if (steem_nb < 6)
-            error += "You need a minimum of 6 steem to create an account<br/>";
+    // Get the the steem blockchain configuration
+        steem.api.getConfig(function (err, config) {
+            if (err) {
+                console.log(err, config);
+                throw new Error(err);
+            }
+            // Get the steem blockchain properties
+            steem.api.getChainProperties(function (err2, chainProps) {
+                if (err2) {
+                    console.log(err2, chainProps);
+                    throw new Error(err2);
+                }
 
+                // Get the ratio to create an account without delegation, as of writing this it's 30.
+                var ratio = config['STEEMIT_CREATE_ACCOUNT_WITH_STEEM_MODIFIER'];
+                // Get the account creation fee and multiply it by the ratio to get the fee needed to create an account without delegation
+                var fee = Asset.from(chainProps.account_creation_fee).multiply(ratio);
+
+
+                if (parseFloat(steem_nb) < fee.amount)
+                    error += "You need a minimum of "+fee+" steem to create an account<br/>";
+            });
+        });
     if (isValidUsername == null) {
         steem.api.getAccounts([username], function (err, result) {
             if (result.length != 0) {
@@ -181,19 +208,20 @@ function validateInput_account(username, design, steem_nb, log_user, log_activek
     if (!validator.validate(mail))
         error += "Incorrect email address. <br/>"
 
-    steem.api.getAccounts([log_user], function(err, result) {
+    steem.api.getAccounts([log_user], function (err, result) {
         if (result.length != 0) {
             var pubWif = result[0].active.key_auths[0][0];
             var valid = false;
             try {
                 valid = steem.auth.wifIsValid(log_activekey, pubWif)
-            }catch (e){}
+            } catch (e) {
+            }
 
             if (!valid)
                 error += "Wrong login or active key.<br/>";
             if (!isNaN(steem_nb))
                 if (parseFloat(result[0].balance) < parseFloat(steem_nb))
-                    error += "You don't have enough steem to gift "+steem_nb+" STEEM. You have "+result[0].balance+"<br/>";
+                    error += "You don't have enough steem to gift " + steem_nb + " STEEM. You have " + result[0].balance + "<br/>";
 
         } else {
             error += "Wrong login or password.<br/>";
@@ -212,12 +240,11 @@ function validateInput_account(username, design, steem_nb, log_user, log_activek
  * @param {String} password - Password to be written on the card.
  * @param {String} mail - Mail used to send the finished card
  */
-function validateInput_create(username, password, design, steem_nb, mail, callback)
-{
+function validateInput_create(username, password, design, steem_nb, mail, callback) {
     error = "";
     var isValidUsername = steem.utils.validateAccountName(username);
     if (isValidUsername != null)
-        error += isValidUsername+"<br/>";
+        error += isValidUsername + "<br/>";
     if (isNaN(steem_nb))
         error += "Wrong steem value, you need to set a number.<br/> ";
     if (design != "0" && design != "1")
@@ -230,7 +257,6 @@ function validateInput_create(username, password, design, steem_nb, mail, callba
 }
 
 
-
 /**
  * @param {String} to - Destination mail
  * @param {String} giftcard_path - card name relative to /cards/output/
@@ -240,7 +266,7 @@ function sendmail(to, giftcard_path) {
 
     var auth = fs.readFileSync(__dirname + "/auth").toString();
     var mail_user = auth.substring(0, auth.indexOf(":"))
-    var mail_pwd =  auth.substring(auth.indexOf(":")+1)
+    var mail_pwd = auth.substring(auth.indexOf(":") + 1)
     const mailOptions = {
         from: mail_user, // sender address
         to: to, // list of receivers
@@ -248,7 +274,7 @@ function sendmail(to, giftcard_path) {
         html: '<p>Thank you for using steemgifts.com to create a unique STEEM gift card for the holidays! We hope it will be a success as a gift and bring some happy new steemians to the growing community. On behalf of the steemgifts team (fredrikaa and howo!) we wish you a merry Christmas and a happy new year. Steem on!<br /> Please find attached your gift card. We highly recommend that you keep the password well hidden and that it is only shared with the person who receives the gift.</p>',// plain text body
         attachments: [{   // file on disk as an attachment
             filename: giftcard_path,
-            path: __dirname +'/cards/output/'+giftcard_path // stream this file
+            path: __dirname + '/cards/output/' + giftcard_path // stream this file
         }]
     };
 
@@ -261,7 +287,7 @@ function sendmail(to, giftcard_path) {
     });
 
     transporter.sendMail(mailOptions, function (err, info) {
-        if(err)
+        if (err)
             console.log(err);
 
     });
@@ -274,8 +300,10 @@ function sendmail(to, giftcard_path) {
  * @return {int}  number of decimals
  */
 function decimalPlaces(num) {
-    var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
-    if (!match) { return 0; }
+    var match = ('' + num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+    if (!match) {
+        return 0;
+    }
     return Math.max(
         0,
         // Number of digits right of decimal point.
@@ -284,7 +312,7 @@ function decimalPlaces(num) {
         - (match[2] ? +match[2] : 0));
 }
 
-app.post('/create', urlencodedParser, function (req,res) {
+app.post('/create', urlencodedParser, function (req, res) {
     var username = sanitize(req.body.username);
     var password = sanitize(req.body.password);
     var design = "0";//sanitize(req.body.design);
@@ -292,16 +320,16 @@ app.post('/create', urlencodedParser, function (req,res) {
     var mail = sanitize(req.body.mail);
 
     username = username.toLowerCase();
-    validateInput_create(username, password, design, steem_nb, mail , function (error) {
+    validateInput_create(username, password, design, steem_nb, mail, function (error) {
         if (error === "") {
             writeimage("nitesh9/Steem-GiftCard-Christmas-Double-Sided.png", username + ".png", username, password, steem_nb, function () {
-             fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
-             sendmail(mail, username + ".png");
-             var content = fs.readFileSync(__dirname + "/success.html").toString();
-             content = content.replace("##$EMAIL##", mail);
-             content = content.replace("on your purchase ", "");
-             res.send(content);
-             });
+                fs.unlink(__dirname + "/cards/output/" + username + "qr.png");
+                sendmail(mail, username + ".png");
+                var content = fs.readFileSync(__dirname + "/success.html").toString();
+                content = content.replace("##$EMAIL##", mail);
+                content = content.replace("on your purchase ", "");
+                res.send(content);
+            });
         }
         else {
             var content = fs.readFileSync(__dirname + "/main.html").toString();
@@ -312,8 +340,7 @@ app.post('/create', urlencodedParser, function (req,res) {
 });
 
 
-
-app.post('/', urlencodedParser, function (req,res) {
+app.post('/', urlencodedParser, function (req, res) {
     var username = sanitize(req.body.username);
     var design = "0";//sanitize(req.body.design);
     var steem_nb = sanitize(req.body.steem);
@@ -327,48 +354,48 @@ app.post('/', urlencodedParser, function (req,res) {
 
     validateInput_account(username, design, steem_nb, log_user, log_activekey, mail, function (error) {
 
-    if (error === "") {
+        if (error === "") {
 
-        steem_nb = "" + Math.round(steem_nb * 1000) / 1000;
+            steem_nb = "" + Math.round(steem_nb * 1000) / 1000;
 
-        var steem_displayed = steem_nb;
+            var steem_displayed = steem_nb;
 
-        var decimals = decimalPlaces(steem_nb)
+            var decimals = decimalPlaces(steem_nb)
 
-        if (decimals === 0)
-            steem_nb += ".000 STEEM";
-        else if (decimals === 1)
-            steem_nb += "00 STEEM";
-        else if (decimals === 2)
-            steem_nb += "0 STEEM";
-        else
-            steem_nb += " STEEM"
-        createAccount(username, password, log_user, log_activekey, steem_nb, function (success) {
-            if (success) {
-                writeimage("nitesh9/Steem-GiftCard-Christmas-Double-Sided.png", username + ".png", username, password, steem_displayed, function () {
-                    fs.unlink(__dirname + "/cards/output/"+username+"qr.png");
-                    sendmail(mail, username + ".png");
-                    var content = fs.readFileSync(__dirname + "/success.html").toString();
-                    content = content.replace("##$EMAIL##", mail)
+            if (decimals === 0)
+                steem_nb += ".000 STEEM";
+            else if (decimals === 1)
+                steem_nb += "00 STEEM";
+            else if (decimals === 2)
+                steem_nb += "0 STEEM";
+            else
+                steem_nb += " STEEM"
+            createAccount(username, password, log_user, log_activekey, steem_nb, function (success) {
+                if (success) {
+                    writeimage("nitesh9/Steem-GiftCard-Christmas-Double-Sided.png", username + ".png", username, password, steem_displayed, function () {
+                        fs.unlink(__dirname + "/cards/output/" + username + "qr.png");
+                        sendmail(mail, username + ".png");
+                        var content = fs.readFileSync(__dirname + "/success.html").toString();
+                        content = content.replace("##$EMAIL##", mail)
+                        res.send(content);
+                    });
+                } else {
+                    var content = fs.readFileSync(__dirname + "/main.html").toString();
+                    content = content.replace("<p class=\"error\"></p>", "<p style=\"text-transform: none\">" +
+                        "There was an error during the creation of your account.<br/> " +
+                        "Please look if your steem was sent, if so, the account is : " + username + ":" + password + " . <br/>" +
+                        "Contact us for your card.</p>")
                     res.send(content);
-                });
-            } else {
-                var content = fs.readFileSync(__dirname + "/main.html").toString();
-                content = content.replace("<p class=\"error\"></p>", "<p style=\"text-transform: none\">" +
-                    "There was an error during the creation of your account.<br/> " +
-                    "Please look if your steem was sent, if so, the account is : " + username + ":" + password + " . <br/>" +
-                    "Contact us for your card.</p>")
-                res.send(content);
-            }
-        });
+                }
+            });
 
 
-    }
-    else {
-        var content = fs.readFileSync(__dirname + "/main.html").toString();
-        content = content.replace("<p class=\"error\"></p>", "<p class=\"error\">" + error + "</p>")
-        res.send(content);
-    }
+        }
+        else {
+            var content = fs.readFileSync(__dirname + "/main.html").toString();
+            content = content.replace("<p class=\"error\"></p>", "<p class=\"error\">" + error + "</p>")
+            res.send(content);
+        }
     });
 });
 
