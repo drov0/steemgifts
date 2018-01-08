@@ -81,8 +81,6 @@ function createAccount(username, password, owner_name, wif, steem_nb, callback) 
 // Main page
 app.get('/', function (req, res) {
     res.sendFile(__dirname + "/main.html")
-    var wif = steem.auth.toWif("how", "barman", 'active');
-    console.log(wif)
 });
 
 // Creation without an account page
